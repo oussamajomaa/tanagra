@@ -1,0 +1,153 @@
+
+.spinner{
+  border: 8px solid silver;
+  border-top: 8px solid #337AB7;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 700ms linear infinite;
+  top:50%;
+  left: 50%;
+  position: absolute;
+  z-index: 100;
+}
+
+.content{
+  height: 93vh;
+  padding-left: 15px;
+  padding-right: 18px;
+  padding-top: 15px;
+}
+
+
+.height1{
+  height: 40vh;
+  overflow-y: scroll;
+  width: 100%;
+  margin: auto;
+  margin-bottom: 10px;
+}
+
+.height2{
+  height: 40vh;
+  overflow-y: scroll;
+  width: 100%;
+  margin: auto;
+  margin-bottom: 10px;
+
+}
+
+.height1::-webkit-scrollbar {
+  width: 1px;   
+}
+.height2::-webkit-scrollbar {
+  width: 1px;   
+}
+
+.slider{
+  height: 16vh;
+}
+
+.dropzone{
+  width: 100% ;
+  height: 25vh;
+  position: relative;
+  /* border: solid 1px black; */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: 10px;
+  
+}
+
+.dropzone img{
+    width: 100px;
+}
+
+.textArea{
+    width: 100%;
+    height: 25vh;
+}
+
+input[type='radio']:checked:after {
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  top: -2px;
+  left: -1px;
+  position: relative;
+  background-color: #FFC107;
+  content: '';
+  display: inline-block;
+  visibility: visible;
+}
+
+
+
+#fileDropReff{
+  opacity: 0;
+  position: absolute;
+  z-index: 2;
+  width: 80%;
+  height: 5vh;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+
+
+
+@keyframes spin {
+  0% { transform: rotate(0deg)}
+  100% { transform: rotate(-360deg);}
+}
+
+
+#mapAddress {
+  position: relative;
+  border: #17A2B8 1px solid;
+  height: 77vh;
+}
+
+.center-button{
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1000;
+}
+
+
+textarea
+{
+  width:100%;
+  padding:10px; 
+  height:18vh;
+  border: none;
+  box-shadow: rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.9) 0px 0px 0px 1px;
+  margin-bottom: 10px;
+}
+
+h3, h2, label{
+  padding: 0;
+  margin: 0;
+}
+
+
+.number-icon
+{
+  width: 24px !important;
+height: 24px !important;
+margin-left: -12px;
+margin-top: -12px;
+border-radius: 18px;
+border: 2px solid #3F51B5;
+text-align: center;
+color: #3F51B5;
+background-color: rgb(255, 0, 0);
+font-size: 16px;  
+z-index: 10000;
+}
+
+/* slider css */

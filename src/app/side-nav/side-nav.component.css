@@ -1,0 +1,58 @@
+body{
+    padding: 0;
+    margin: 0;
+    /* background: white; */
+    
+  }
+  
+  .companyName{
+    font-size: 150%;
+  }
+  div {
+    overflow: inherit;
+  }
+  a{
+    text-decoration: none;
+  
+    white-space: normal;
+  }
+  
+  a:hover{
+    color: yellow;
+  }
+  
+  .example-icon {
+    padding: 0 14px;
+  }
+  
+  .example-spacer {
+    flex: 1 1 auto;
+  }
+  .mat-sidenav-content{
+    background: #cfcfcf !important;  
+  }
+  
+  .mat-sidenav{
+    background: #002147;
+    color: white;
+    width: 40%;
+    padding-left: 2%;
+    
+  }
+  
+  .mat-sidenav-container a{
+    text-align: left;
+  }
+  
+  .active{
+    color: yellow;
+  }
+  
+  .mat-sidenav-content{
+    background: white;
+  }
+
+  ::ng-deep .mat-select-placeholder {
+    color: rgb(0, 0, 0) !important;
+}
+  

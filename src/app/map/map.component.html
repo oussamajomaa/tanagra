@@ -1,0 +1,176 @@
+<div class="content ">
+	<div class="file">
+		<div *ngIf="msg==='' && loading && text != '' && textArea" class="spinner"></div>
+		<div *ngIf="msg==='' && loading && !textArea " class="spinner1"></div>
+		<div *ngIf="isUnkown" class="spinner2"></div>
+		<!-- Container to display two Buttom -->
+		<div class="d-flex justify-content-between mb-2 buttons">
+
+			<button mat-raised-button [ngClass]="{'clicked': textArea}"  class="primary btn1"
+				(click)="onSelectTextArea($event)">Add text</button>
+			<button mat-raised-button [ngClass]="{'clicked': !textArea}"  class="primary btn1"
+				(click)="onSelectUploadFile($event)">Upload file(s)</button>
+		</div>
+
+		<!-- Container to display Text editor -->
+		<div *ngIf="textArea" class="mb-1">
+			<div class="textArea">
+				<textarea placeholder="Add text (max: 130.000 words)" [(ngModel)]="text"
+					 rows="4" maxlength="900000" class="rounded">
+				</textarea>
+			</div>
+
+			<div class="d-flex justify-content-between align-items-center">
+				<button *ngIf="textArea" (click)="sendToSpacy($event)" mat-raised-button class="primary btn2"
+					 [disabled]="!text ">Map</button>
+
+				<button *ngIf="textArea" (click)="clearText()" mat-raised-button class="danger btn2">Clear</button>
+			</div>
+		</div>
+
+		<!-- Container to displayupload file -->
+		<div *ngIf="!textArea" style="cursor: pointer;">
+			<label for="fileDropReff" class="dropzone mat-elevation-z8 info">
+				<h5>Click to upload</h5>
+				<img src="assets/icons/upload.png" alt="" class="mb-1">
+				<input type="file" accept=".txt,.zip" (change)="sendToSpacy($event)" #myInput class="mt-1"
+					id="fileDropReff">
+				<h5>File type: txt (max: 1000 KB) or Zip (max: 350 KB)</h5>
+				
+			</label>
+		</div>
+
+		<h4 *ngIf="noRepeatedCities.length === 0 && notFoundRepeatedCities.length === 0 && multiDuplicatedCities.length === 0"
+			class="text-center danger rounded my-1 msg">{{msg}}</h4>
+
+		<!-- Container to display List Location -->
+		<div class="selects mt-1">
+			
+			<!-- Container to display found location -->
+			<div class="mb-2" *ngIf="noRepeatedCities.length > 0">
+				<mat-select placeholder="{{noRepeatedCities.length}} Places found by Spacy & in DB :" 
+						class="w-100 p-2 white rounded mat-elevation-z5 btn-title">
+						<mat-option *ngFor="let location of noRepeatedCities">
+							{{location.city}} - {{location.country}}
+						</mat-option>
+				</mat-select>
+			</div>
+
+			<!-- Container to display unknown location -->
+			<div class="mb-2 w-100 d-flex" *ngIf="notFoundRepeatedCities.length > 0">
+				<mat-select placeholder="{{notFoundRepeatedCities.length}} Places found by Spacy but not in DB :"
+					class="col p-2 warning rounded mat-elevation-z5 btn-title">
+					<mat-option *ngFor="let location of notFoundRepeatedCities">
+						{{location.city}}
+					</mat-option>
+				</mat-select>
+
+				<!-- NOMINATIM -->
+				<!-- <button 
+					*ngIf="notFoundRepeatedCities.length > 0 && auth.isAuthenticated()"
+					class="primary rounded  mat-elevation-z4 col p-2" 
+					(click)="unkownLocation()">Coordonnées via Nominatim
+				</button>-->
+			</div>
+		</div>
+
+
+		<!-- Container to display confused location -->
+		<div *ngIf="duplicatedCities.length > 0">
+			<p class="white mat-elevation-z8 rounded w-100 secondary btn-title"
+				style="padding: 6px; margin-bottom:5px; font-size:14px;">Places found by Spacy, but duplicated in DB :</p>
+			<div [ngClass]="{'rounded height2' :textArea, 'rounded height1' :!textArea}" >
+
+				<Div *ngFor="let dups of multiDuplicatedCities; let j=index" style="border-bottom: 2px solid rgb(138, 138, 138);">
+					<div *ngFor="let location of dups; let i=index">
+
+						<div class="secondary p-1 rounded ">
+							<input	type="radio" 
+									name="radio{{j}}" 
+									value="{{location.city}}" 
+									id="checkbox{{i}}{{j}}"
+									style="cursor: pointer;"
+									(click)="confirmLocation($event,location.id)">
+							<label	class="ml-1" 
+									style="cursor: pointer;" 
+									for="checkbox{{i}}{{j}}">
+									{{location.city}} - {{location.country}} 
+							</label>
+						</div>
+					</div>
+				</Div>
+			</div>
+			<button class="secondary rounded mat-elevation-z4 p-2 mb-1 btn3"
+				*ngIf="duplicatedCities.length > 0"
+				(click)="displayOnMap()">
+				Display on the map
+			</button>
+		</div>
+
+		<button class="light primary rounded mat-elevation-z4 p-2 mb-1 btn3"
+			*ngIf="notFoundRepeatedCities.length > 0 || noRepeatedCities.length > 0 || multiDuplicatedCities.length > 0"
+			(click)="exportCSV()">
+			Export as CSV
+		</button>
+	</div>
+
+	<div class="map pr-2">
+		<!-- Container to display MAP -->
+		<div
+			class="row"
+			[ngClass]="{'map1' :textArea, 'map2' :!textArea}" 
+			id="map">
+			<!-- Center Icon -->
+
+			<!-- Afficher le bouton "centrer" en cas de "selecetionner un nom du fichier" -->
+			<button (click)="onSelectText(textSelected)" color="light" mat-mini-fab class="center-button"
+				*ngIf="onCenter && !textArea && !onFirsteCenter">
+				<mat-icon> my_location</mat-icon>
+			</button>
+
+			<!-- Afficher le bouton "centrer" en cas de "selecetionner une date du fichier" -->
+			<button (click)="onSelectDate(dateSelected)" color="light" mat-mini-fab class="center-button"
+				*ngIf="!onCenter && !textArea">
+				<mat-icon> my_location</mat-icon>
+			</button>
+
+
+			<!-- Afficher le bouton "centrer" en cas de "Saisir un text" -->
+			<button (click)="displayOnMap()" color="light" mat-mini-fab class="center-button" 
+				*ngIf="onFirsteCenter && !onCenter">
+				<mat-icon> my_location</mat-icon>
+			</button>
+		</div>
+
+		<!-- Container to display bottom of Map -->
+		<div class="row slider d-flex items-align-center" *ngIf="foundCities.length > 0">
+			<div class="col mt-1 p-1">
+				<!-- Displays file name on button -->
+				<div class="row p-1">
+					<div class="col-3" *ngIf="listOfText.length > 1">
+						<button class="light white rounded mat-elevation-z4" style="border: none;"
+							(click)="onSelectALl()">All files</button>
+					</div>
+					<div *ngIf="listOfText.length > 0" class="col-9">
+						<button *ngFor="let item of listOfText" (click)="onSelectText(item.legend)"
+							class="m-1 rounded mat-elevation-z4 primary" style="border: none;">
+							{{item.legend}}
+						</button>
+					</div>
+
+
+				</div>
+				<!-- Slider for chronic date -->
+				<div *ngIf="listOfText.length > 1" class="mt-2">
+					<ngx-slider [(value)]="value" [options]="options" [(ngModel)]="dateSelected"
+						(mouseup)="onSelectDate(dateSelected)">
+
+					</ngx-slider>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+</div>
+
+<!--class="row" [ngStyle]="{'height':textArea ? '76vh':'70vh'}"-->

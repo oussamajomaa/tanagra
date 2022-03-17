@@ -1,0 +1,40 @@
+<div style="position: fixed; width:100%">
+	<mat-toolbar style="height: 7vh; color:white; background:#002147;">
+		<div fxShow="true" fxHide.gt-sm="true">
+			<button mat-icon-button (click)="sidenav.toggle()">
+				<mat-icon>menu</mat-icon>
+			</button>
+		</div>
+		<a mat-button class="companyName" routerLink="/">
+			<img src="assets/icons/obtic.svg" width="50" alt=""> <span class="ml-2 h6">Tanagra Mapping Tool</span>
+		</a>
+		<span class="example-spacer"></span>
+		<div fxShow="true" fxHide.lt-md="true">
+			<!--<a routerLink="home" routerLinkActive="active" mat-button>HOME</a>-->
+			<a routerLink="map" routerLinkActive="active" mat-button>MAPPING</a>
+			<a routerLink="location" routerLinkActive="active" mat-button>ADD LOCATION</a>
+			<a routerLink="about" routerLinkActive="active" mat-button>ABOUT</a>
+			<a *ngIf="auth.isAuthenticated()" matTooltip="Logout" (click)="auth.logout()" routerLinkActive="active" mat-button><mat-icon>logout</mat-icon></a>
+			<a *ngIf="!auth.isAuthenticated()" matTooltip="Login"  routerLink="login" routerLinkActive="active" mat-button><mat-icon>login</mat-icon></a>
+		</div>
+	</mat-toolbar>
+	<mat-sidenav-container style="height: 100vh;">
+		<mat-sidenav 
+			color="primary" 
+			#sidenav 
+			fxLayout="column" mode="over" opened="false" fxHide.gt-sm="true">
+			<div fxLayout="column">
+				<!--<a routerLink="home" routerLinkActive="active" (click)="sidenav.toggle()" mat-button>HOME</a>
+				<a routerLink="login" routerLinkActive="active" (click)="sidenav.toggle()" mat-button>LOGIN</a>-->
+				<a routerLink="map" routerLinkActive="active" (click)="sidenav.toggle()" mat-button>MAPPING</a>
+				<a routerLink="location" routerLinkActive="active" (click)="sidenav.toggle()" mat-button>ADD LOCATION</a>
+				<a routerLink="about" routerLinkActive="active" (click)="sidenav.toggle()" mat-button>ABOUT</a>
+				<a *ngIf="auth.isAuthenticated()" matTooltip="Logout"  (click)="auth.logout()" (click)="sidenav.toggle()" routerLinkActive="active" mat-button><mat-icon>logout</mat-icon></a>
+				<a *ngIf="!auth.isAuthenticated()" matTooltip="Login" (click)="sidenav.toggle()" routerLink="login" routerLinkActive="active" mat-button><mat-icon>login</mat-icon></a>
+			</div>
+		</mat-sidenav>
+		<mat-sidenav-content>
+			<router-outlet></router-outlet>
+		</mat-sidenav-content>
+	</mat-sidenav-container>
+</div>

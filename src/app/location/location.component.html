@@ -1,0 +1,102 @@
+<div class="row p-3 mb-5 m-2" style="margin: auto;margin-top:15px;">
+    <!-- <div *ngIf="!loading" class="spinner"></div>-->
+
+    <!-- Container to display map-->
+    <div id="mapLocation" class="col-lg-6 col-sm-12 mb-3" [ngStyle]="{'height':width>990 ? '70vh':'50vh'}">
+        <h6 class="click">Click on the map to get location</h6>
+    </div>
+
+    <!-- Container to display form adding new location -->
+    <div class="col-lg-6 col-sm-12">
+        <h1 class="title text-center">Add new location</h1>
+
+        <!-- Container inputs -->
+        <div class="row">
+            <div class="col">
+                <label>Country</label>
+                <select [(ngModel)]="country" class="w-100 p-2" >
+                    <option *ngFor="let row of countries" value="{{row.country_fr}}">{{row.country_fr}}</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Place</label>
+                <input [(ngModel)]="city" required class="w-100 p-2 rounded">
+            </div>
+            <div class="col">
+                <label>Lat</label>
+                <input [(ngModel)]="lat" type="number" required class="w-100 p-2 rounded">
+            </div>
+            <div class="col">
+                <label>Lng</label>
+                <input [(ngModel)]="lng" type="number" required class="w-100 p-2 rounded">
+            </div>
+            <div class="col">
+                <label for="fileDropReff1" class="dropzone " style="cursor: pointer; ">
+                    <input type="file" accept=".csv" (change)="uploadCSV($event)" id="fileDropReff1">
+                    <img src="assets/icons/csv-logo.png" alt="" class="csv-logo">
+                </label>
+            </div>
+        </div>
+
+        <!--  Button To add location to list -->
+        <div class="d-flex justify-content-between my-2">
+            <button mat-mini-fab (click)="onAddLocation()" class="bg-success" *ngIf='country && city && lat && lng'
+                matTooltip="Add another location">
+                <mat-icon>add</mat-icon>
+            </button>
+        </div>
+
+        <div class="row warning m-1 py-1 rounded" *ngIf="locations.length > 0">
+            <hr>
+            <div class="col">
+                <h3>Country</h3>
+            </div>
+            <div class="col">
+                <h3>Place</h3>
+            </div>
+            <div class="col">
+                <h3>Lat</h3>
+            </div>
+            <div class="col">
+                <h3>Lng</h3>
+            </div>
+            <div class="col">
+                <h3>Actions</h3>
+            </div>
+        </div>
+
+        <!-- List of new location before validating -->
+        <div class="add-location" *ngIf="locations.length > 0" style="background: rgb(238, 238, 238);">
+            <div class="row m-1 rounded" style="border-bottom:1px solid;"
+                *ngFor="let location of locations; let i=index">
+                <div class="col">
+                   <h3>{{location.country}}</h3>
+                </div>
+                <div class="col">
+                    <input type="text" [value]="location.city" class="w-100" (input)="editCity($event,i)">
+                    <!-- <h3>{{location.city}}</h3> -->
+                </div>
+                <div class="col">
+                    <h3>{{location.lat | number : '1.2-2'}}</h3>
+                </div>
+                <div class="col">
+                    <h3>{{location.lng | number : '1.2-2'}}</h3>
+                </div>
+                <div class="col">
+                    <mat-icon style="margin-right: 10px; cursor:pointer;" color="warn" (click)="removeCity(location.city)"
+                        matTooltip="delete">
+                        delete
+                    </mat-icon>
+                </div>
+            </div>
+        </div>
+        <div class="mx-1 my-3">
+            <button class="submit" (click)="onSubmit()" mat-raised-button *ngIf="locations.length > 0"
+                style="display:block; margin-right:0;margin-left:auto;" class="success ">Save to DB
+            </button>
+        </div>
+    </div>
+
+
+</div>
+

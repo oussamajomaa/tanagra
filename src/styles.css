@@ -1,0 +1,82 @@
+@import "~leaflet/dist/leaflet.css";
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@import "../node_modules/ngx-toastr/toastr.css";
+
+html, body { 
+    height: 100%; 
+    font-family: 'Montserrat', sans-serif;
+}
+body { margin: 0;  }
+
+h1,h2,h3,h4,h5,h6,p,a,span,input,label,textarea,select,button,option{font-family: 'Montserrat', sans-serif;}
+
+
+
+body { margin: 0; padding: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+.primary{
+    color:white;
+    background-color: #002147;
+    /* background-color: #3F51B5; */
+}
+
+.primary:hover{
+    background-color: #002147d0;
+}
+
+.warning{
+    color:black;
+    background-color: #FFC107;
+}
+
+.warning:hover{
+    background-color: #ffc107d0;
+}
+
+.danger{
+    color:white;
+    background-color: #DC3545;
+}
+
+.danger:hover{
+    background-color: #dc3546d0;
+}
+
+.white{
+    color:black;
+    background-color: white;
+}
+
+.white:hover{
+    background-color: rgba(255, 255, 255, 0.856);
+}
+
+.info{
+    color:white;
+    background-color: #17A2B8;
+}
+
+.info:hover{
+    background-color: #17a3b8d0;
+}
+
+.success{
+    color:white;
+    background-color: #1E7E34;
+}
+
+.success:hover{
+    background-color: #1E7E34d0;
+}
+
+.secondary{
+    background-color: #e4e2e2;
+}
+
+.secondary:hover{
+    background-color: #e4e2e2d0;
+}
+
+
+
