@@ -52,7 +52,7 @@ def unkown():
     latlng=[]
     word = request.args.get('place')
    
-    print(word)
+   
     geolocator = Nominatim(user_agent="app.py", timeout=10)
     location = geolocator.geocode(word)
     print(location)

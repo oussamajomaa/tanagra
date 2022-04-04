@@ -115,5 +115,29 @@ export class FunctionsService {
 		return this.http.get('assets/data/river.json')
 	}
 
+	getDifferenceRiver(array1, array2) {
+		return array1.filter(object1 => {
+		  return !array2.some(object2 => {
+			return object1.city === object2.name;
+		  });
+		});
+	  }
+
+	  getDifferenceCountry(array1, array2) {
+		return array1.filter(object1 => {
+		  return !array2.some(object2 => {
+			return object1.city === object2.country;
+		  });
+		});
+	  }
+
+	  getDifferencePlaceFound(array1, array2) {
+		return array1.filter(object1 => {
+		  return !array2.some(object2 => {
+			return object1.city === object2.city;
+		  });
+		});
+	  }
+
 
 }

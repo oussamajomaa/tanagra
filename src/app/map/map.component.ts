@@ -23,7 +23,7 @@ export class MapComponent implements AfterViewInit {
 	value: number = 5;
 	options: Options = {
 		showTicksValues: true,
-		stepsArray: []
+		stepsArray: [],
 	};
 
 	clusters: L.MarkerClusterGroup
@@ -76,6 +76,9 @@ export class MapComponent implements AfterViewInit {
 	countrtyCoords: any = []
 	riverMarkers: any = []
 	riverCoords: any = []
+	onAllFiles = true
+	grs: any = [] // groupe of rivers
+
 	constructor(
 		private dataService: DataService,
 		private http: HttpClient,
@@ -88,6 +91,9 @@ export class MapComponent implements AfterViewInit {
 	ngAfterViewInit(): void {
 		this.dataService.getLocation().subscribe((res: any) => {
 			this.locations = res
+		})
+		this.dataService.getCountries().subscribe((res: any) => {
+			this.countries = res
 		})
 		this.map = this.fs.createMap()
 		this.getRiver()
@@ -129,6 +135,7 @@ export class MapComponent implements AfterViewInit {
 	onSelectUploadFile(e) {
 		this.clearText()
 		this.textArea = false
+		this.onAllFiles = true
 	}
 
 	// Vider le textarea
@@ -157,6 +164,7 @@ export class MapComponent implements AfterViewInit {
 		this.geojson = []
 		this.loading = false
 		this.onCartographier = true
+		this.onAllFiles = true
 		if (this.map) this.map.remove()
 		this.map = this.fs.createMap()
 	}
@@ -266,22 +274,34 @@ export class MapComponent implements AfterViewInit {
 				this.listOfText.push(item)
 
 			}
-
-			// Regrouper les dates des fichiers dans la liste listOfDate
-			this.groupeByList = this.fs.groupBy(this.spacyList, item => item.fileDate)
-
-			for (let key of this.groupeByList) {
-				let item = {
-					value: key[0]
-				}
-				this.listOfDate.push(item)
-			}
-			this.listOfDate = this.listOfDate.sort((a, b) => {
+			this.listOfText = this.listOfText.sort((a, b) => {
 				if (parseInt(a.value) > parseInt(b.value)) return 1
 				if (parseInt(a.value) < parseInt(b.value)) return -1
 				return 0
 			})
-			this.options.stepsArray = this.listOfDate
+			this.options.stepsArray = []
+
+			// Regrouper les dates des fichiers dans la liste listOfDate
+			this.groupeByList = this.fs.groupBy(this.spacyList, item => item.fileDate)
+			for (let key of this.groupeByList) {
+				let item = {
+					legend: key[1][0].fileName,
+					value: key[0]
+				}
+				this.listOfDate.push(item)
+				this.options.stepsArray.push({value:key[0]})
+			}
+			this.listOfDate = this.listOfDate.sort((a:any, b:any) => {
+				if (parseInt(a.value) > parseInt(b.value)) return 1
+				if (parseInt(a.value) < parseInt(b.value)) return -1
+				return 0
+			})
+			this.options.stepsArray = this.options.stepsArray.sort((a:any, b:any) => {
+				if (parseInt(a.value) > parseInt(b.value)) return 1
+				if (parseInt(a.value) < parseInt(b.value)) return -1
+				return 0
+			})
+			// this.options.stepsArray = this.listOfDate
 			this.identifyCity(this.spacyList)
 		})
 	}
@@ -307,7 +327,6 @@ export class MapComponent implements AfterViewInit {
 		// convertir la liste des lieux en une chaîne de caractères
 		this.spacyText = spacyLocation.toString()
 
-
 		if (this.spacyText != "") {
 			// Itérer la liste des locations et chercher si une ville est existe dans la chaîne de caractères
 			this.locations.map(location => {
@@ -315,14 +334,16 @@ export class MapComponent implements AfterViewInit {
 				if (this.spacyText.match(new RegExp(cityRegex, 'g'))) {
 					this.foundCities.push(location)
 				}
-				let countryRegex = new RegExp("\\b" + location.country + "\\b")
+			})
+
+			this.countries.map(item => {
+				let countryRegex = new RegExp("\\b" + item.country_fr + "\\b")
+
 				if (this.spacyText.match(new RegExp(countryRegex, 'g'))) {
-					this.foundCountries.push(location.country)
+					this.foundCountries.push(item.country_fr)
 				}
 			})
 		}
-
-
 
 
 		// Récupérer les lieux non identifiés et les mettre dans une liste notFoundCities
@@ -389,12 +410,15 @@ export class MapComponent implements AfterViewInit {
 						item.lat = location.lat
 						item.lng = location.lng
 						item.country = location.country
+						item.departement = location.departement
 						this.allNotDuplicatedCities.push(item)
 					}
 
 				})
 			})
 		})
+
+
 
 		if (this.allNotDuplicatedCities.length > 1) {
 			this.fs.sortListObject(this.allNotDuplicatedCities)
@@ -407,48 +431,57 @@ export class MapComponent implements AfterViewInit {
 		for (let key of nrc) {
 			let item = {
 				city: key[0],
-				country: key[1][0].country
+				country: key[1][0].country,
+
 			}
 			this.noRepeatedCities.push(item)
 		}
 
 		// ##########################  COUNTRY ####################### //
 
-		// regroupe la liste des foundCountries par le nom de country
-		this.foundCountries = this.fs.groupBy(this.foundCountries, location => location)
 
-		this.groupCountries = []
-		for (let key of this.foundCountries) {
-			this.groupCountries.push(key[0])
-		}
 		this.allCountries = []
 		this.spacyList.map(location => {
-			this.groupCountries.map((country: any) => {
-				if (location.city === country) {
-					let item = {
-						country: country,
-						fileName: location.fileName,
-						fileDate: location.fileDate
-					}
+			let splitLocation = location.city.split(' ')
+			splitLocation.map(el => {
+				this.foundCountries.map((country: any) => {
+					if (el.trim() === country) {
+						if (this.allCountries.filter(item => item.country === country).length === 0){
 
-					this.allCountries.push(item)
-				}
+							let item = {
+								country: country,
+								fileName: location.fileName,
+								fileDate: location.fileDate
+							}
+							this.allCountries.push(item)
+						}
+					}
+				})
 			})
 		})
-		this.countryCordinate = []
 		// add les pays à liste des lieux trouvés
-		// this.groupCountries.map(country => {
-		// 	let item = {
-		// 		city: country,
-		// 		country: country,
-		// 		occurence: 1
-		// 	}
-		// 	this.noRepeatedCities.push(item)
-		// })
+		this.allCountries.map(obj => {
+			let item = {
+				city: obj.country,
+				country: 'country',
+				occurence: 1
+			}
+			this.noRepeatedCities.push(item)
+		})
+
+		
+
+		this.getRiverCordinate()
+		let gr = this.fs.groupBy(this.foundRivers, item => item.name)
+		this.grs = []
+		for (let key of gr) {
+			this.grs.push(key[0])
+		}
+
 		// // add les fleuves à liste des lieux trouvés
-		// this.foundRivers.map(river => {
-		// 	this.noRepeatedCities.push({ city: river.name, country: river.name, occurence: 1 })
-		// })
+		this.grs.map(river => {
+			this.noRepeatedCities.push({ city: river, country: 'river', occurence: 1 })
+		})
 
 		this.fs.getOccurence(this.noRepeatedCities, this.spacyList)
 
@@ -461,12 +494,9 @@ export class MapComponent implements AfterViewInit {
 			arr.push(item)
 		}
 
+		
 
-		// arr = notFoundRepeatedCities
-		// notFoundRepeatedCities
-		// remove pays de la liste
 		arr.map(location => {
-
 			if (!this.groupCountries.find(country => country === location.city)) {
 				this.notFoundRepeatedCities.push(location)
 			}
@@ -474,36 +504,10 @@ export class MapComponent implements AfterViewInit {
 
 
 
-
-		// // remove rivère de la liste
-		// this.foundRivers.map(river => {
-		// 	this.notFoundRepeatedCities = this.notFoundRepeatedCities.filter(location => {
-		// 		location.city != river.name
-		// 	})
-		// })
-
-		// this.sortListObject(notFoundRepeatedCities)
-
-		// this.geoJson('assets/data/pays.json', country.country)
-		// console.log(this.allCountries);
-		// this.allCountries.map(item => {
-		// 	this.geoJson('assets/data/pays.json', item.country)
-		// })
-		// this.countryMarkers = []
-		// this.allCountries.map(item => {
-		// 	this.getCountryCordinate(item.country)
-		// })
-
-
-
-
+		this.displayOnMap()
 		// ####################################################
 		// Afficher les villes non dupliquées
-		if (this.notDuplicatedCities.length > 0) {
-			this.places = this.allNotDuplicatedCities
-			this.displayOnMap()
-		}
-		else {
+		if (this.notDuplicatedCities.length === 0) {
 			this.msg = "Aucun lieu trouvé !!!"
 		}
 
@@ -516,14 +520,16 @@ export class MapComponent implements AfterViewInit {
 				if (Array.isArray(location.geometry.coordinates[0][0][0])) {
 					item = {
 						lat: (location['geometry']['coordinates'][0][0][0][0]),
-						lng: (location['geometry']['coordinates'][0][0][0][1])
+						lng: (location['geometry']['coordinates'][0][0][0][1]),
+						country: country
 					}
 					this.countryMarkers.push((item))
 				}
 				else {
 					item = {
 						lat: (location['geometry']['coordinates'][0][0][0]),
-						lng: (location['geometry']['coordinates'][0][0][1])
+						lng: (location['geometry']['coordinates'][0][0][1]),
+						country: country
 					}
 					this.countryMarkers.push((item))
 				}
@@ -571,7 +577,7 @@ export class MapComponent implements AfterViewInit {
 		// this.riverMarkers = []
 		let rm = []
 		let rf = []
-		
+
 		this.spacyList.map(location => {
 			this.riverMarkers.map((river: any) => {
 				let item
@@ -586,7 +592,7 @@ export class MapComponent implements AfterViewInit {
 					rm.push(item);
 				}
 			})
-			
+
 			this.foundRivers.map(river => {
 				let item
 				if (location.city === river.name) {
@@ -601,9 +607,12 @@ export class MapComponent implements AfterViewInit {
 		})
 		this.foundRivers = rf
 		this.riverMarkers = rm
-		
-
 	}
+
+	// select count(*), city from town group by city order by count(*) desc
+	// DELETE t1 FROM town t1 INNER JOIN town t2  WHERE      t1.id < t2.id      AND t1.city = t2.city     AND t1.departement = t2.departement;
+	// DELETE t1 FROM town t1, town t2 WHERE t1.id < t2.id AND t1.city = t2.city AND t1.departement = t2.departement
+
 
 	confirmedLocation = []
 	confirmLocation(event, id) {
@@ -623,12 +632,9 @@ export class MapComponent implements AfterViewInit {
 					item.fileName = element.fileName
 				}
 			})
-
-
-			// remove les locations de la listes des ambigues selon le nom de la location choisie
-			// this.allNotDuplicatedCities = this.allNotDuplicatedCities.filter(location => {
-			// 	return location.city != item.city
-			// })
+			this.allNotDuplicatedCities = this.allNotDuplicatedCities.filter(obj => {
+				return obj.city != item.city
+			})
 			this.allNotDuplicatedCities.push(item)
 
 			this.fs.sortListObject(this.allNotDuplicatedCities)
@@ -636,22 +642,33 @@ export class MapComponent implements AfterViewInit {
 			this.confirmedLocation = this.confirmedLocation.filter(location => {
 				return location.city != item.city
 			})
-
 			// Ajouter le lieu confirmé à la list confirmedLocation
 			this.confirmedLocation.push(item)
 
+
 			this.noRepeatedCities = []
 			let nrc = this.fs.groupBy(this.allNotDuplicatedCities, item => item.city)
+
 			for (let key of nrc) {
 				let item = {
 					city: key[0],
-					country: key[1][0].country
+					country: key[1][0].country,
+					departement: key[1][0].departement
 				}
 				this.noRepeatedCities.push(item)
 				this.fs.sortListObject(this.noRepeatedCities)
 				this.fs.getOccurence(this.noRepeatedCities, this.spacyList)
 			}
 		}
+		
+		// add les pays à liste des lieux trouvés
+		this.allCountries.map(obj => {
+			this.noRepeatedCities.push({city: obj.country, country: 'country', occurence: 1})
+		})
+		// add les fleuves à liste des lieux trouvés
+		this.grs.map(river => {
+			this.noRepeatedCities.push({ city: river, country: 'river', occurence: 1 })
+		})
 
 	}
 
@@ -661,14 +678,21 @@ export class MapComponent implements AfterViewInit {
 		// this.textSelected = ""
 		// this.dateSelected = ""
 		this.onFirsteCenter = true
+		this.onAllFiles = true
+		// this.onAllFiles = false
+		if (this.listOfDate.length > 0)	{
+			this.textSelected = this.listOfDate[0].legend
+			this.dateSelected = this.listOfDate[0].value
+		}
+		
+		
 		// this.onCenter = true
 		this.fs.getOccurence(this.allNotDuplicatedCities, this.spacyList)
 
 		this.markers = []
+		this.initCoordsFileName(this.textSelected)
+		// this.initCoordsAll()
 
-		this.initCoordsAll()
-		console.log((this.countryMarkers));
-		
 
 		if (this.clusters) this.clusters.clearLayers()
 		this.getMarkers(this.allNotDuplicatedCities)
@@ -681,6 +705,12 @@ export class MapComponent implements AfterViewInit {
 			// let index = this.duplicatedCities.indexOf(element)
 			// this.duplicatedCities.splice(index, 1)
 		})
+
+		//remove rivère and country from the not found liste 
+		this.notFoundRepeatedCities = (this.fs.getDifferenceRiver(this.notFoundRepeatedCities,this.rivers))
+		this.notFoundRepeatedCities = (this.fs.getDifferenceCountry(this.notFoundRepeatedCities,this.allCountries))
+		this.notFoundRepeatedCities = (this.fs.getDifferencePlaceFound(this.notFoundRepeatedCities,this.noRepeatedCities))	
+
 		this.multiDuplicatedCities = []
 		if (this.duplicatedCities.length > 1) {
 			let nrc = this.fs.groupBy(this.duplicatedCities, item => item.city)
@@ -692,37 +722,26 @@ export class MapComponent implements AfterViewInit {
 
 	}
 
-	//  Cette methode pour recentrer la carte selon les markers en cliquant sur le bouton centrer
-	onSelectText(text) {
-		// this.onFirsteCenter = false
-		// this.onCenter = true
-		this.textSelected = text
-		let arr = []
-		this.allNotDuplicatedCities.filter(place => {
-			if (place.fileName === this.textSelected) arr.push(place)
-		})
 
-		console.log(text);
-		// Récupérer l'occurence de chaque lieu
-		this.fs.getOccurence(arr, this.spacyList)
 
-		this.initCoordsFileName(text)
-
-		if (this.clusters) this.clusters.clearLayers()
-		this.getMarkers(arr)
-	}
-
-	initCoordsFileName(attr:string){
+	initCoordsFileName(attr: string) {
 		this.countryMarkers = []
 		this.foundRivers = []
 		this.riverMarkers = []
 		this.getRiverCordinate()
 
+		let groupFileName = this.fs.groupBy(this.allCountries, item => item.country + '|' + item.fileName)
+		let gf = []
+		for (let key of groupFileName) {
+			gf.push({ country: key[0].split('|')[0], fileName: key[0].split('|')[1] })
+		}
 
-		// filter country with file text name
-		let c = this.allCountries.filter(location => {
+		//filter country with file text name
+		let c = gf.filter(location => {
 			return location.fileName === attr
 		})
+
+
 
 		// display country on map
 		c.map(item => {
@@ -744,24 +763,42 @@ export class MapComponent implements AfterViewInit {
 			return location.fileName === attr
 		})
 
-		
+
+
+
 		//filter country marker with file text name
 		c.map(location => {
 			this.getCountryCordinate(location.country)
 		})
+		if (c.length === 0) this.countryMarkers = []
+		if (rm.length === 0) this.riverMarkers = []
+
 	}
 
-	initCoordsFileDate(attr:string){
+	initCoordsFileDate(attr: string) {
 		this.countryMarkers = []
 		this.foundRivers = []
 		this.riverMarkers = []
 		this.getRiverCordinate()
 
+		let groupFileDate = this.fs.groupBy(this.allCountries, item => item.country + '|' + item.fileDate)
+		let gf = []
+		for (let key of groupFileDate) {
+			gf.push({ country: key[0].split('|')[0], fileDate: key[0].split('|')[1] })
+		}
+
+		//filter country with file text name
+		let c = gf.filter(location => {
+			return location.fileDate === attr.toString()
+		})
+
+
 
 		// filter country with file text name
-		let c = this.allCountries.filter(location => {
-			return location.fileDate === attr
-		})
+		// c = this.allCountries.filter(location => {
+		// 	return location.fileDate === attr
+		// })
+
 
 		// display country on map
 		c.map(item => {
@@ -783,21 +820,33 @@ export class MapComponent implements AfterViewInit {
 			return location.fileDate === attr
 		})
 
-		
+
 		//filter country marker with file text name
 		c.map(location => {
 			this.getCountryCordinate(location.country)
 		})
+
+		if (c.length === 0) this.countryMarkers = []
+		if (rm.length === 0) this.riverMarkers = []
 	}
 
-	initCoordsAll(){
+	initCoordsAll() {
 		this.countryMarkers = []
 		this.foundRivers = []
 		this.riverMarkers = []
 		this.getRiverCordinate()
 
+		let groupFileDate = this.fs.groupBy(this.allCountries, item => item.country + '|' + item.fileDate)
+		let gf = []
+
+		for (let key of groupFileDate) {
+			gf.push({ country: key[0].split('|')[0], fileDate: key[0].split('|')[1] })
+		}
+
+
+
 		// display country on map
-		this.allCountries.map(item => {
+		gf.map(item => {
 			this.geoJson('assets/data/pays.json', item.country)
 		})
 
@@ -810,6 +859,36 @@ export class MapComponent implements AfterViewInit {
 		this.allCountries.map(location => {
 			this.getCountryCordinate(location.country)
 		})
+
+		//remove rivère de la liste and country
+		// this.notFoundRepeatedCities = (this.fs.getDifferenceRiver(this.notFoundRepeatedCities,this.rivers))
+		// this.notFoundRepeatedCities = (this.fs.getDifferenceCountry(this.notFoundRepeatedCities,this.allCountries))
+		// this.notFoundRepeatedCities = (this.fs.getDifferencePlaceFound(this.notFoundRepeatedCities,this.noRepeatedCities))	
+	}
+
+	//  Cette methode pour recentrer la carte selon les markers en cliquant sur le bouton centrer
+	onSelectText(text) {
+		// this.onFirsteCenter = false
+		// this.onCenter = true
+		this.onFirsteCenter = false
+		this.textSelected = text
+		this.onAllFiles = true
+		let arr = []
+		this.allNotDuplicatedCities.filter(place => {
+			if (place.fileName === this.textSelected) arr.push(place)
+		})
+
+		if (arr.length > 0) {
+			this.dateSelected = arr[0].fileDate
+		}
+
+		// Récupérer l'occurence de chaque lieu
+		this.fs.getOccurence(arr, this.spacyList)
+
+		this.initCoordsFileName(text)
+
+		if (this.clusters) this.clusters.clearLayers()
+		this.getMarkers(arr)
 	}
 
 	onSelectDate(date) {
@@ -822,6 +901,10 @@ export class MapComponent implements AfterViewInit {
 			if (place.fileDate === this.dateSelected) arr.push(place)
 		})
 
+		if (arr.length > 0) {
+			this.textSelected = arr[0].fileName
+		}
+
 		// Récupérer l'occurence de chaque lieu
 		this.fs.getOccurence(arr, this.spacyList)
 
@@ -833,10 +916,12 @@ export class MapComponent implements AfterViewInit {
 	onSelectALl() {
 		this.onFirsteCenter = true
 		this.onCenter = false
+		this.onAllFiles = false
+		this.textSelected = ''
 		let arr = this.allNotDuplicatedCities
 		// Récupérer l'occurence de chaque lieu
 		this.fs.getOccurence(arr, this.spacyList)
-
+		
 		this.initCoordsAll()
 		if (this.clusters) this.clusters.clearLayers()
 		this.getMarkers(arr)
@@ -850,17 +935,35 @@ export class MapComponent implements AfterViewInit {
 		this.map = this.fs.createMap()
 		this.clusters = L.markerClusterGroup({});
 		let iconSize
+		let groupeArr = this.fs.groupBy(arr, item => item.city)
+		// {city,country,departement,fileDate,fileName,label,lat,lng,occurence}
 
-		arr.map(location => {
-			if (this.onCenter) iconSize = 20
-			// else iconSize = 20 + location.occurence
-			else iconSize = 20
+
+		let newArr = []
+		for (let key of groupeArr) {
+			newArr.push({
+				city: key[0],
+				country: key[1][0].country,
+				departement: key[1][0].departement,
+				fileDate: key[1][0].fileDate,
+				fileName: key[1][0].fileName,
+				label: key[1][0].label,
+				lat: key[1][0].lat,
+				lng: key[1][0].lng,
+				occurence: key[1][0].occurence,
+			})
+		}
+		newArr.map(location => {
+			let fileDate = ''
+			let fileName = ''
+			if (location.fileDate) fileDate = location.fileDate
+			if (location.fileName) fileName = location.fileName
 			this.marker = L.marker([location.lat, location.lng],
 				{
 					icon: new L.Icon(
 						{
 							iconUrl: 'assets/icons/circle_blue.png',
-							iconSize: [iconSize, iconSize],
+							iconSize: [15 + location.occurence, 15 + location.occurence],
 							iconAnchor: [6, 10],
 							popupAnchor: [5, -10],
 						}
@@ -868,7 +971,13 @@ export class MapComponent implements AfterViewInit {
 				}
 			)
 
-			this.marker.bindPopup(`<center><span>${location.city}</span><span> - </span><span>${location.country}</span></center><br><center><span>Occurrence: ${location.occurence}</span> - <span>${location.fileName} </span></center>`)
+			this.marker.bindPopup(`<center><span>${location.city}</span><span> - </span><span>${location.country}</span> <br> <span>Occurrence: ${location.occurence}</span> <br> <span>${fileName} </span> <br> <span>${fileDate} </span>`)
+			this.marker.on('mouseover', function(){
+				this.openPopup()
+			})
+			this.marker.on('mouseout', function(){
+				this.closePopup()
+			})
 			this.markers.push(this.marker)
 
 

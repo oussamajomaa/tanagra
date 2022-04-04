@@ -48,17 +48,17 @@
 			
 			<!-- Container to display found location -->
 			<div class="mb-2" *ngIf="noRepeatedCities.length > 0">
-				<mat-select placeholder="{{noRepeatedCities.length}} Places found by Spacy & in DB :" 
+				<mat-select placeholder="{{noRepeatedCities.length}} Place(s) found by Spacy and in DB :" 
 						class="w-100 p-2 white rounded mat-elevation-z5 btn-title">
 						<mat-option *ngFor="let location of noRepeatedCities">
-							{{location.city}} - {{location.country}}
+							{{location.city}} - {{location.country}} 
 						</mat-option>
 				</mat-select>
 			</div>
 
 			<!-- Container to display unknown location -->
 			<div class="mb-2 w-100 d-flex" *ngIf="notFoundRepeatedCities.length > 0">
-				<mat-select placeholder="{{notFoundRepeatedCities.length}} Places found by Spacy but not in DB :"
+				<mat-select placeholder="{{notFoundRepeatedCities.length}} Place(s) found by Spacy but not in DB :"
 					class="col p-2 warning rounded mat-elevation-z5 btn-title">
 					<mat-option *ngFor="let location of notFoundRepeatedCities">
 						{{location.city}}
@@ -78,7 +78,7 @@
 		<!-- Container to display confused location -->
 		<div *ngIf="duplicatedCities.length > 0">
 			<p class="white mat-elevation-z8 rounded w-100 secondary btn-title"
-				style="padding: 6px; margin-bottom:5px; font-size:14px;">Places found by Spacy, but duplicated in DB :</p>
+				style="padding: 6px; margin-bottom:5px; font-size:14px;">Place(s) found by Spacy, but duplicated in DB :</p>
 			<div [ngClass]="{'rounded height2' :textArea, 'rounded height1' :!textArea}" >
 
 				<Div *ngFor="let dups of multiDuplicatedCities; let j=index" style="border-bottom: 2px solid rgb(138, 138, 138);">
@@ -94,7 +94,7 @@
 							<label	class="ml-1" 
 									style="cursor: pointer;" 
 									for="checkbox{{i}}{{j}}">
-									{{location.city}} - {{location.country}} 
+									{{location.city}} - {{location.country}} - {{location.departement}}
 							</label>
 						</div>
 					</div>
@@ -152,8 +152,12 @@
 							(click)="onSelectALl()">All files</button>
 					</div>
 					<div *ngIf="listOfText.length > 0" class="col-9">
-						<button *ngFor="let item of listOfText" (click)="onSelectText(item.legend)"
-							class="m-1 rounded mat-elevation-z4 primary" style="border: none;">
+						<button 
+							*ngFor="let item of listOfText" 
+							(click)="onSelectText(item.legend)"
+							class="m-1 rounded mat-elevation-z4 primary"
+							[ngClass]="{'danger' :item.legend === textSelected , 'primary' :item.legend != text}"
+							style="border: none;">
 							{{item.legend}}
 						</button>
 					</div>
@@ -161,7 +165,7 @@
 
 				</div>
 				<!-- Slider for chronic date -->
-				<div *ngIf="listOfText.length > 1" class="mt-2">
+				<div *ngIf="listOfText.length > 1 && onAllFiles" class="mt-2" >
 					<ngx-slider [(value)]="value" [options]="options" [(ngModel)]="dateSelected"
 						(mouseup)="onSelectDate(dateSelected)">
 
