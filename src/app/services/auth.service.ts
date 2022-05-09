@@ -10,7 +10,7 @@ export class AuthService {
 	constructor(private router: Router) { }
 
 	login(user) {
-		if (user.email === "admin@admin.fr" && user.password === "admin") {
+		if (user.email === "tanagra" && user.password === "osm2022!") {
 			// localStorage.setItem('status', 'logged')
 			this.router.navigateByUrl('location')
 			this.authState.next(true)
